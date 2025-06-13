@@ -29,11 +29,22 @@ const matchMessages = {
 // Game state
 let currentQuestionIndex = 0;
 let scores = [];
+let socket;
+let roomCode;
+let playerRole;
+let playerAnswer;
+let otherPlayerAnswer;
 
 // DOM Elements
+const roomSetup = document.getElementById('roomSetup');
+const gameContainer = document.getElementById('gameContainer');
+const createRoomBtn = document.getElementById('createRoomBtn');
+const joinRoomBtn = document.getElementById('joinRoomBtn');
+const roomCodeInput = document.getElementById('roomCode');
+const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+const playerRoleDisplay = document.getElementById('playerRole');
 const questionText = document.getElementById('questionText');
-const player1Answer = document.getElementById('player1Answer');
-const player2Answer = document.getElementById('player2Answer');
+const playerAnswerInput = document.getElementById('playerAnswer');
 const submitBtn = document.getElementById('submitBtn');
 const nextBtn = document.getElementById('nextBtn');
 const restartBtn = document.getElementById('restartBtn');
@@ -42,6 +53,79 @@ const finalResults = document.getElementById('finalResults');
 const progressBar = document.querySelector('.progress-bar');
 const currentQuestionSpan = document.getElementById('currentQuestion');
 const totalQuestionsSpan = document.getElementById('totalQuestions');
+
+// Initialize Socket.IO connection
+function initSocket() {
+    socket = io('https://your-socket-server.com'); // Replace with your Socket.IO server URL
+
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+
+    socket.on('roomCreated', (code) => {
+        roomCode = code;
+        roomCodeDisplay.textContent = code;
+        playerRole = 'Player 1';
+        playerRoleDisplay.textContent = playerRole;
+        showGame();
+    });
+
+    socket.on('roomJoined', (code) => {
+        roomCode = code;
+        roomCodeDisplay.textContent = code;
+        playerRole = 'Player 2';
+        playerRoleDisplay.textContent = playerRole;
+        showGame();
+    });
+
+    socket.on('gameStart', () => {
+        initGame();
+    });
+
+    socket.on('answerReceived', (answer) => {
+        otherPlayerAnswer = answer;
+        if (playerAnswer) {
+            showResults();
+        }
+    });
+
+    socket.on('nextQuestion', () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            showQuestion();
+            updateProgress();
+        } else {
+            showFinalResults();
+        }
+    });
+
+    socket.on('gameRestart', () => {
+        currentQuestionIndex = 0;
+        scores = [];
+        initGame();
+    });
+}
+
+// Create a new room
+function createRoom() {
+    socket.emit('createRoom');
+}
+
+// Join an existing room
+function joinRoom() {
+    const code = roomCodeInput.value.toUpperCase();
+    if (code.length === 6) {
+        socket.emit('joinRoom', code);
+    } else {
+        alert('Please enter a valid 6-character room code');
+    }
+}
+
+// Show game interface
+function showGame() {
+    roomSetup.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+}
 
 // Initialize game
 function initGame() {
@@ -54,8 +138,9 @@ function initGame() {
 function showQuestion() {
     questionText.textContent = questions[currentQuestionIndex];
     currentQuestionSpan.textContent = currentQuestionIndex + 1;
-    player1Answer.value = '';
-    player2Answer.value = '';
+    playerAnswerInput.value = '';
+    playerAnswer = null;
+    otherPlayerAnswer = null;
     resultsContainer.classList.add('hidden');
     finalResults.classList.add('hidden');
 }
@@ -116,21 +201,30 @@ function getMatchMessage(score) {
     return messages[Math.floor(Math.random() * messages.length)];
 }
 
-// Show results for current question
-function showResults() {
-    const answer1 = player1Answer.value;
-    const answer2 = player2Answer.value;
+// Submit answer
+function submitAnswer() {
+    const answer = playerAnswerInput.value;
     
-    if (!answer1 || !answer2) {
-        alert('Both players need to submit their answers!');
+    if (!answer) {
+        alert('Please enter your answer!');
         return;
     }
 
-    const similarity = calculateSimilarity(answer1, answer2);
+    playerAnswer = answer;
+    socket.emit('submitAnswer', { roomCode, answer });
+
+    if (otherPlayerAnswer) {
+        showResults();
+    }
+}
+
+// Show results for current question
+function showResults() {
+    const similarity = calculateSimilarity(playerAnswer, otherPlayerAnswer);
     scores.push(similarity);
 
-    document.getElementById('player1Result').textContent = answer1;
-    document.getElementById('player2Result').textContent = answer2;
+    document.getElementById('player1Result').textContent = playerRole === 'Player 1' ? playerAnswer : otherPlayerAnswer;
+    document.getElementById('player2Result').textContent = playerRole === 'Player 2' ? playerAnswer : otherPlayerAnswer;
     document.getElementById('matchScore').textContent = similarity;
     document.getElementById('matchMessage').textContent = getMatchMessage(similarity);
 
@@ -146,25 +240,15 @@ function showFinalResults() {
 }
 
 // Event Listeners
-submitBtn.addEventListener('click', () => {
-    showResults();
-});
-
+createRoomBtn.addEventListener('click', createRoom);
+joinRoomBtn.addEventListener('click', joinRoom);
+submitBtn.addEventListener('click', submitAnswer);
 nextBtn.addEventListener('click', () => {
-    currentQuestionIndex++;
-    if (currentQuestionIndex < questions.length) {
-        showQuestion();
-        updateProgress();
-    } else {
-        showFinalResults();
-    }
+    socket.emit('nextQuestion', roomCode);
 });
-
 restartBtn.addEventListener('click', () => {
-    currentQuestionIndex = 0;
-    scores = [];
-    initGame();
+    socket.emit('restartGame', roomCode);
 });
 
-// Initialize the game
-initGame(); 
+// Initialize Socket.IO connection
+initSocket(); 
