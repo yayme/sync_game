@@ -29,7 +29,8 @@ const matchMessages = {
 // Game state
 let currentQuestionIndex = 0;
 let scores = [];
-let socket;
+let peer;
+let connection;
 let roomCode;
 let playerRole;
 let playerAnswer;
@@ -54,68 +55,94 @@ const progressBar = document.querySelector('.progress-bar');
 const currentQuestionSpan = document.getElementById('currentQuestion');
 const totalQuestionsSpan = document.getElementById('totalQuestions');
 
-// Initialize Socket.IO connection
-function initSocket() {
-    socket = io('https://your-socket-server.com'); // Replace with your Socket.IO server URL
-
-    socket.on('connect', () => {
-        console.log('Connected to server');
+// Initialize PeerJS
+function initPeer() {
+    peer = new Peer();
+    
+    peer.on('open', (id) => {
+        console.log('My peer ID is:', id);
     });
 
-    socket.on('roomCreated', (code) => {
-        roomCode = code;
-        roomCodeDisplay.textContent = code;
+    peer.on('connection', (conn) => {
+        connection = conn;
         playerRole = 'Player 1';
         playerRoleDisplay.textContent = playerRole;
+        setupConnection();
+    });
+
+    peer.on('error', (err) => {
+        console.error('PeerJS error:', err);
+        alert('Connection error. Please try again.');
+    });
+}
+
+// Setup connection event handlers
+function setupConnection() {
+    connection.on('open', () => {
+        console.log('Connection established');
         showGame();
-    });
-
-    socket.on('roomJoined', (code) => {
-        roomCode = code;
-        roomCodeDisplay.textContent = code;
-        playerRole = 'Player 2';
-        playerRoleDisplay.textContent = playerRole;
-        showGame();
-    });
-
-    socket.on('gameStart', () => {
-        initGame();
-    });
-
-    socket.on('answerReceived', (answer) => {
-        otherPlayerAnswer = answer;
-        if (playerAnswer) {
-            showResults();
+        if (playerRole === 'Player 1') {
+            initGame();
         }
     });
 
-    socket.on('nextQuestion', () => {
-        currentQuestionIndex++;
-        if (currentQuestionIndex < questions.length) {
-            showQuestion();
-            updateProgress();
-        } else {
-            showFinalResults();
-        }
+    connection.on('data', (data) => {
+        handleIncomingData(data);
     });
 
-    socket.on('gameRestart', () => {
-        currentQuestionIndex = 0;
-        scores = [];
-        initGame();
+    connection.on('close', () => {
+        alert('Other player disconnected. Game over.');
+        location.reload();
     });
+}
+
+// Handle incoming data from other player
+function handleIncomingData(data) {
+    switch (data.type) {
+        case 'answer':
+            otherPlayerAnswer = data.answer;
+            if (playerAnswer) {
+                showResults();
+            }
+            break;
+        case 'nextQuestion':
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+                updateProgress();
+            } else {
+                showFinalResults();
+            }
+            break;
+        case 'restart':
+            currentQuestionIndex = 0;
+            scores = [];
+            initGame();
+            break;
+    }
 }
 
 // Create a new room
 function createRoom() {
-    socket.emit('createRoom');
+    initPeer();
+    roomCode = peer.id;
+    roomCodeDisplay.textContent = roomCode;
+    playerRole = 'Player 1';
+    playerRoleDisplay.textContent = playerRole;
 }
 
 // Join an existing room
 function joinRoom() {
-    const code = roomCodeInput.value.toUpperCase();
+    const code = roomCodeInput.value;
     if (code.length === 6) {
-        socket.emit('joinRoom', code);
+        initPeer();
+        roomCode = code;
+        roomCodeDisplay.textContent = code;
+        playerRole = 'Player 2';
+        playerRoleDisplay.textContent = playerRole;
+        
+        connection = peer.connect(code);
+        setupConnection();
     } else {
         alert('Please enter a valid 6-character room code');
     }
@@ -211,7 +238,10 @@ function submitAnswer() {
     }
 
     playerAnswer = answer;
-    socket.emit('submitAnswer', { roomCode, answer });
+    connection.send({
+        type: 'answer',
+        answer: answer
+    });
 
     if (otherPlayerAnswer) {
         showResults();
@@ -244,11 +274,8 @@ createRoomBtn.addEventListener('click', createRoom);
 joinRoomBtn.addEventListener('click', joinRoom);
 submitBtn.addEventListener('click', submitAnswer);
 nextBtn.addEventListener('click', () => {
-    socket.emit('nextQuestion', roomCode);
+    connection.send({ type: 'nextQuestion' });
 });
 restartBtn.addEventListener('click', () => {
-    socket.emit('restartGame', roomCode);
-});
-
-// Initialize Socket.IO connection
-initSocket(); 
+    connection.send({ type: 'restart' });
+}); 
