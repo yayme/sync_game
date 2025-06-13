@@ -225,4 +225,104 @@ button:hover {
         height: 120px;
         font-size: 2rem;
     }
+}
+
+.room-setup {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    text-align: center;
+}
+
+.setup-options {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.setup-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.setup-btn:hover {
+    transform: translateY(-2px);
+    background: #ff5252;
+}
+
+.divider {
+    margin: 1rem 0;
+    position: relative;
+    text-align: center;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 45%;
+    height: 1px;
+    background: #ddd;
+}
+
+.divider::before {
+    left: 0;
+}
+
+.divider::after {
+    right: 0;
+}
+
+.join-room {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.join-room input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    font-size: 1rem;
+    text-align: center;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.join-room input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.player-role {
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.room-code {
+    font-family: monospace;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    opacity: 0.8;
 } 

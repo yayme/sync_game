@@ -13,7 +13,23 @@
             <p class="subtitle">Discover how in sync your imaginations are!</p>
         </header>
 
-        <div class="game-container">
+        <div class="room-setup" id="roomSetup">
+            <div class="setup-options">
+                <button id="createRoomBtn" class="setup-btn">Create New Room</button>
+                <div class="divider">or</div>
+                <div class="join-room">
+                    <input type="text" id="roomCode" placeholder="Enter Room Code" maxlength="6">
+                    <button id="joinRoomBtn" class="setup-btn">Join Room</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-container hidden" id="gameContainer">
+            <div class="player-info">
+                <div class="player-role" id="playerRole">Waiting for other player...</div>
+                <div class="room-code">Room Code: <span id="roomCodeDisplay"></span></div>
+            </div>
+
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
                 <div class="progress-text">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></div>
@@ -25,14 +41,10 @@
 
             <div class="answers-container">
                 <div class="player-input">
-                    <label for="player1Answer">Player 1's Answer:</label>
-                    <input type="text" id="player1Answer" placeholder="Type your answer...">
+                    <label for="playerAnswer">Your Answer:</label>
+                    <input type="text" id="playerAnswer" placeholder="Type your answer...">
                 </div>
-                <div class="player-input">
-                    <label for="player2Answer">Player 2's Answer:</label>
-                    <input type="text" id="player2Answer" placeholder="Type your answer...">
-                </div>
-                <button id="submitBtn" class="submit-btn">Submit Answers</button>
+                <button id="submitBtn" class="submit-btn">Submit Answer</button>
             </div>
 
             <div class="results-container hidden" id="resultsContainer">
@@ -67,6 +79,7 @@
             </div>
         </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 
