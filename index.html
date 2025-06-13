@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple Dynamics Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Couple Dynamics Game</h1>
+            <p class="subtitle">Discover how in sync your imaginations are!</p>
+        </header>
+
+        <div class="game-container">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+                <div class="progress-text">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></div>
+            </div>
+
+            <div class="question-container">
+                <h2 id="questionText">Loading question...</h2>
+            </div>
+
+            <div class="answers-container">
+                <div class="player-input">
+                    <label for="player1Answer">Player 1's Answer:</label>
+                    <input type="text" id="player1Answer" placeholder="Type your answer...">
+                </div>
+                <div class="player-input">
+                    <label for="player2Answer">Player 2's Answer:</label>
+                    <input type="text" id="player2Answer" placeholder="Type your answer...">
+                </div>
+                <button id="submitBtn" class="submit-btn">Submit Answers</button>
+            </div>
+
+            <div class="results-container hidden" id="resultsContainer">
+                <div class="answers-display">
+                    <div class="answer-box">
+                        <h3>Player 1:</h3>
+                        <p id="player1Result"></p>
+                    </div>
+                    <div class="answer-box">
+                        <h3>Player 2:</h3>
+                        <p id="player2Result"></p>
+                    </div>
+                </div>
+                <div class="match-score">
+                    <div class="score-circle">
+                        <span id="matchScore">0</span>%
+                    </div>
+                    <p id="matchMessage">Calculating match...</p>
+                </div>
+                <button id="nextBtn" class="next-btn">Next Question</button>
+            </div>
+
+            <div class="final-results hidden" id="finalResults">
+                <h2>Final Results</h2>
+                <div class="final-score">
+                    <div class="score-circle large">
+                        <span id="finalScore">0</span>%
+                    </div>
+                    <p id="finalMessage">Calculating final match...</p>
+                </div>
+                <button id="restartBtn" class="restart-btn">Play Again</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
